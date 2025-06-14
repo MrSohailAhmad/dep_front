@@ -21,17 +21,26 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build App
+      - name: Build Vite App
         run: npm run build
 
-      - name: Deploy via SCP
+      - name: Remove old dist folder from EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            rm -rf /home/ubuntu/vite-frontend/dist
+
+      - name: Deploy built app to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "dist/*"
-          target: "/home/ubuntu/vite-frontend/dist"
+          source: "dist/"
+          target: "/home/ubuntu/vite-frontend/"
 
       - name: Restart NGINX
         uses: appleboy/ssh-action@master
